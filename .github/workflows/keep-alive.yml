@@ -2,8 +2,12 @@ name: ClawCloud 自动登录保活
 
 on:
   schedule:
-    - cron: '0 1 */5 * *'  # UTC 1:00，每5天运行
+    - cron: '0 1 */15 * *'  # 每15天运行一次，确保活跃度
   workflow_dispatch:
+
+# 必须添加：赋予工作流写权限
+permissions:
+  contents: write
 
 jobs:
   auto-login:
@@ -33,5 +37,12 @@ jobs:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-          
         run: python scripts/auto_login.py
+
+      # 添加自动续命步骤
+      - name: Keepalive Workflow
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit --allow-empty -m "Chore: Keep-alive [skip ci]"
+          git push || echo "No changes to push"
